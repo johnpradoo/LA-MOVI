@@ -12,20 +12,13 @@ const RD_API_KEY = 'BMN5XVDCC3R2XSHG6IBWZ5O64BPCOUI44VZGSRAW2E7QSWXLCD7Q';
 // 🔧 MANIFESTO
 // ------------------------------
 const manifest = {
-  id: 'org.aplat.rd',
-  version: '1.0.0',
-  name: 'apLAT RD',
-  description: 'Addon público con integración Real-Debrid',
-  resources: ['catalog', 'stream'],
-  types: ['movie'],
-  idPrefixes: ['rd_'],
-  catalogs: [
-    {
-      type: 'movie',
-      id: 'aplat_catalog',
-      name: 'Películas de Real-Debrid'
-    }
-  ]
+  id: "org.john.realdebrid",
+  version: "1.0.0",
+  name: "Real Debrid Streams",
+  description: "Add-on RD con enlaces premium",
+  resources: ["stream"],
+  types: ["movie", "series"],
+  catalogs: [],
 };
 
 const builder = new addonBuilder(manifest);
