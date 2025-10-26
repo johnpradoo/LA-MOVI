@@ -53,7 +53,7 @@ builder.defineStreamHandler(({ id }) => {
       streams: [
         {
           title: "Stream de prueba apLAT",
-          url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+          url: "https://real-debrid.com/d/M5OUNVTPZXYHEE6B",
         },
       ],
     });
