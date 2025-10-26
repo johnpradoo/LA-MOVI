@@ -1,77 +1,78 @@
-const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
+// apLAT/index.js
+import express from "express";
+import fetch from "node-fetch";
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// --- MANEJO SEGURO DEL TOKEN ---
+const RD_TOKEN = process.env.RD_TOKEN; // <-- Lo guardas tú en Render > Environment
+
+// --- MANIFIESTO STREMIO ---
 const manifest = {
-  id: "org.aplat.movies",
+  id: "org.aplat",
   version: "1.0.0",
   name: "apLAT",
-  description: "Add-on de películas LAT creado por John",
+  description: "Catálogo de películas enlazadas con Real-Debrid",
   types: ["movie"],
-  resources: ["catalog", "stream"],
-  idPrefixes: ["tt"],
   catalogs: [
     {
       type: "movie",
-      id: "aplatCatalog",
-      name: "Catálogo apLAT",
-      extra: [{ name: "search" }]
-    }
-  ]
+      id: "aplat_catalog",
+      name: "apLAT Movies",
+      extra: [{ name: "search" }],
+    },
+  ],
+  resources: ["catalog", "stream"],
 };
 
-const builder = new addonBuilder(manifest);
+// --- MANIFEST ENDPOINT ---
+app.get("/manifest.json", (req, res) => res.json(manifest));
 
-const catalog = [
-  {
-    id: "tt0111161",
-    type: "movie",
-    name: "Sueños de libertad (The Shawshank Redemption)",
-    poster: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
-    description: "Un hombre es encarcelado injustamente y lucha por su libertad con esperanza."
-  },
-  {
-    id: "tt1375666",
-    type: "movie",
-    name: "El origen (Inception)",
-    poster: "https://image.tmdb.org/t/p/w500/aej3LRUga5rhgkmRP6XmuWzK6vR.jpg",
-    description: "Un ladrón que roba secretos del subconsciente debe cumplir la misión imposible de implantar una idea."
-  },
-  {
-    id: "tt0816692",
-    type: "movie",
-    name: "Interestelar (Interstellar)",
-    poster: "https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg",
-    description: "Un grupo de exploradores viaja a través de un agujero de gusano en busca de un nuevo hogar para la humanidad."
+// --- CATALOGO ---
+app.get("/catalog/:type/:id.json", async (req, res) => {
+  try {
+    // Aquí podrías poner tus propias películas base o listarlas desde tu fuente
+    const catalog = [
+      {
+        id: "movie1",
+        name: "Ejemplo RD Movie",
+        poster: "https://i.imgur.com/OdL0XPt.jpg",
+        description: "Película conectada con Real-Debrid",
+      },
+    ];
+    res.json({ metas: catalog });
+  } catch (err) {
+    console.error(err);
+    res.json({ metas: [] });
   }
-];
-
-builder.defineCatalogHandler(({ type, id, extra }) => {
-  if (type === "movie" && id === "aplatCatalog") {
-    if (extra && extra.search) {
-      const search = extra.search.toLowerCase();
-      return Promise.resolve({
-        metas: catalog.filter(m => m.name.toLowerCase().includes(search))
-      });
-    }
-    return Promise.resolve({ metas: catalog });
-  }
-  return Promise.resolve({ metas: [] });
 });
 
-builder.defineStreamHandler(({ id }) => {
-  const streams = {
-    "tt0111161": [
-      { title: "Servidor 1 - 1080p", url: "https://samplelib.com/lib/preview/mp4/sample-5s.mp4" }
-    ],
-    "tt1375666": [
-      { title: "Servidor 1 - 720p", url: "https://samplelib.com/lib/preview/mp4/sample-10s.mp4" }
-    ],
-    "tt0816692": [
-      { title: "Servidor 1 - 1080p", url: "https://samplelib.com/lib/preview/mp4/sample-15s.mp4" }
-    ]
-  };
-  return Promise.resolve({ streams: streams[id] || [] });
+// --- STREAMS ---
+app.get("/stream/:type/:id.json", async (req, res) => {
+  try {
+    // Este sería el punto donde tú usas la API de RD para obtener el enlace del archivo
+    const rdResponse = await fetch("https://api.real-debrid.com/rest/1.0/user", {
+      headers: { Authorization: `Bearer ${RD_TOKEN}` },
+    });
+    const data = await rdResponse.json();
+
+    const streams = [
+      {
+        name: "Real-Debrid",
+        description: `Enlace RD activo para ${data.username || "usuario"}`,
+        url: "https://example.com/movie.mp4", // aquí tú colocarías el enlace que RD devuelva
+      },
+    ];
+
+    res.json({ streams });
+  } catch (err) {
+    console.error(err);
+    res.json({ streams: [] });
+  }
 });
 
-serveHTTP(builder.getInterface(), { port: process.env.PORT || 7000 });
-
-console.log("✅ apLAT Add-on corriendo... accede a /manifest.json");
+// --- INICIO ---
+app.listen(PORT, () => {
+  console.log(`✅ apLAT corriendo en el puerto ${PORT}`);
+});
