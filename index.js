@@ -1,106 +1,69 @@
 // ------------------------------
-// apLAT - Addon público Stremio con Real-Debrid
+// apLAT - Base funcional para Stremio
 // ------------------------------
 
-const express = require("express");
-const { addonBuilder } = require("stremio-addon-sdk");
-const fetch = require("node-fetch");
-
-const app = express();
-
-// 🔑 API KEY Real-Debrid
-const RD_API_KEY = "BMN5XVDCC3R2XSHG6IBWZ5O64BPCOUI44VZGSRAW2E7QSWXLCD7Q";
+const { addonBuilder, serveHTTP } = require('stremio-addon-sdk');
 
 // ------------------------------
 // 🔧 MANIFESTO
 // ------------------------------
 const manifest = {
   id: "org.aplat",
-  version: "1.0.1",
-  name: "apLAT RD",
-  description: "Add-on público con tus archivos Real-Debrid",
+  version: "1.0.0",
+  name: "apLAT Base",
+  description: "Versión base funcional del addon apLAT para Stremio",
   resources: ["catalog", "stream"],
   types: ["movie"],
   catalogs: [
     {
       type: "movie",
       id: "aplat-catalog",
-      name: "Catálogo Real-Debrid",
-      extra: [{ name: "search" }],
+      name: "Catálogo de Prueba apLAT",
     },
   ],
 };
 
+// ------------------------------
+// 🧱 Builder
+// ------------------------------
 const builder = new addonBuilder(manifest);
 
 // ------------------------------
-// 🎬 HANDLER: Catálogo
+// 🎬 HANDLER: Catálogo de prueba
 // ------------------------------
-builder.defineCatalogHandler(async () => {
-  try {
-    const response = await fetch("https://api.real-debrid.com/rest/1.0/downloads", {
-      headers: { Authorization: `Bearer ${RD_API_KEY}` },
-    });
-
-    if (!response.ok) throw new Error("No se pudo conectar con la API de Real-Debrid");
-
-    const downloads = await response.json();
-
-    const metas = downloads.map((item, index) => ({
-      id: `rd_${index}`,
+builder.defineCatalogHandler(() => {
+  const metas = [
+    {
+      id: "aplat_001",
       type: "movie",
-      name: item.filename || "Película sin título",
+      name: "Película de prueba apLAT",
       poster: "https://i.imgur.com/6M7GZ4r.png",
-      description: item.download || "Archivo disponible desde Real-Debrid",
-    }));
-
-    console.log(`✅ Catálogo cargado con ${metas.length} archivos`);
-    return { metas };
-  } catch (err) {
-    console.error("❌ Error cargando catálogo:", err);
-    return { metas: [] };
-  }
+      description: "Si ves esta película aquí, el addon está funcionando correctamente.",
+    },
+  ];
+  return Promise.resolve({ metas });
 });
 
 // ------------------------------
-// 📺 HANDLER: Streams
+// 📺 HANDLER: Stream de prueba
 // ------------------------------
-builder.defineStreamHandler(async ({ id }) => {
-  try {
-    const response = await fetch("https://api.real-debrid.com/rest/1.0/downloads", {
-      headers: { Authorization: `Bearer ${RD_API_KEY}` },
-    });
-
-    if (!response.ok) throw new Error("Error accediendo a Real-Debrid");
-
-    const downloads = await response.json();
-    const index = parseInt(id.replace("rd_", ""));
-    const movie = downloads[index];
-
-    if (!movie) return { streams: [] };
-
-    return {
+builder.defineStreamHandler(({ id }) => {
+  if (id === "aplat_001") {
+    return Promise.resolve({
       streams: [
         {
-          title: movie.filename || "Reproducir desde Real-Debrid",
-          url: movie.download,
+          title: "Stream de prueba apLAT",
+          url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         },
       ],
-    };
-  } catch (err) {
-    console.error("❌ Error obteniendo stream:", err);
-    return { streams: [] };
+    });
   }
+  return Promise.resolve({ streams: [] });
 });
 
 // ------------------------------
-// 🚀 EXPRESS SERVER PARA RENDER
+// 🚀 SERVIDOR HTTP
 // ------------------------------
-app.get("/", (_, res) => res.redirect("/manifest.json"));
-app.get("/manifest.json", (_, res) => res.json(manifest));
-app.use("/", builder.getInterface());
+serveHTTP(builder.getInterface(), { port: process.env.PORT || 7000 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🔥 apLAT RD corriendo en el puerto ${PORT}`);
-});
+console.log("✅ apLAT Base corriendo correctamente");
