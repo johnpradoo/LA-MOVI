@@ -1,9 +1,12 @@
 {
   "name": "aplat",
   "version": "1.0.0",
+  "description": "Add-on de películas para Stremio creado por John",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "start": "node index.js"
+  },
+  "dependencies": {
+    "stremio-addon-sdk": "^1.4.0"
   }
 }
