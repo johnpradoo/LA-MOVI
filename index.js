@@ -1,70 +1,96 @@
-const express = require('express');
-const { addonBuilder } = require('stremio-addon-sdk');
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+// ------------------------------
+// apLAT - Addon público Stremio con Real-Debrid
+// ------------------------------
 
+const { addonBuilder } = require('stremio-addon-sdk');
+const fetch = require('node-fetch');
+
+// 🔑 API KEY Real-Debrid (no la compartas públicamente)
+const RD_API_KEY = 'BMN5XVDCC3R2XSHG6IBWZ5O64BPCOUI44VZGSRAW2E7QSWXLCD7Q';
+
+// ------------------------------
+// 🔧 MANIFESTO
+// ------------------------------
 const manifest = {
-    id: 'org.aplat',
-    version: '1.0.0',
-    name: 'apLAT',
-    description: 'Addon público con soporte Real-Debrid',
-    types: ['movie'],
-    catalogs: [
-        {
-            type: 'movie',
-            id: 'aplat_catalog',
-            name: 'apLAT Películas',
-            extra: [{ name: 'search', isRequired: false }]
-        }
-    ],
-    resources: ['catalog', 'stream']
+  id: 'org.aplat.rd',
+  version: '1.0.0',
+  name: 'apLAT RD',
+  description: 'Addon público con integración Real-Debrid',
+  resources: ['catalog', 'stream'],
+  types: ['movie'],
+  idPrefixes: ['rd_'],
+  catalogs: [
+    {
+      type: 'movie',
+      id: 'aplat_catalog',
+      name: 'Películas de Real-Debrid'
+    }
+  ]
 };
 
 const builder = new addonBuilder(manifest);
 
-// Catálogo de ejemplo
-builder.defineCatalogHandler(async () => ({
-    metas: [
-        {
-            id: 'tt4154796',
-            type: 'movie',
-            name: 'Avengers: Endgame',
-            poster: 'https://m.media-amazon.com/images/M/MV5BMjMxNjY2NzY4NF5BMl5BanBnXkFtZTgwMzYzMDA5NzM@._V1_.jpg'
-        }
-    ]
-}));
+// ------------------------------
+// 🎬 HANDLER: Catálogo
+// ------------------------------
+builder.defineCatalogHandler(async () => {
+  try {
+    const response = await fetch('https://api.real-debrid.com/rest/1.0/downloads', {
+      headers: { Authorization: `Bearer ${RD_API_KEY}` }
+    });
 
-// Integración básica Real-Debrid
-builder.defineStreamHandler(async ({ id }) => {
-    const apiKey = 'BMN5XVDCC3R2XSHG6IBWZ5O64BPCOUI44VZGSRAW2E7QSWXLCD7Q';
-    try {
-        const res = await fetch('https://api.real-debrid.com/rest/1.0/torrents', {
-            headers: { Authorization: `Bearer ${apiKey}` }
-        });
-        const data = await res.json();
+    if (!response.ok) throw new Error('No se pudo conectar con la API de Real-Debrid');
 
-        // Verifica si la respuesta es válida
-        if (!Array.isArray(data)) {
-            console.log('⚠️ Respuesta inesperada de RD:', data);
-            return { streams: [] };
-        }
+    const downloads = await response.json();
 
-        const streams = data.slice(0, 3).map(item => ({
-            title: item.filename || 'Archivo RD',
-            url: 'https://example.com'
-        }));
+    // Convertimos cada archivo RD a formato de película para Stremio
+    const metas = downloads.map((item, index) => ({
+      id: `rd_${index}`,
+      type: 'movie',
+      name: item.filename || 'Película sin título',
+      poster: 'https://i.imgur.com/6M7GZ4r.png', // poster genérico
+      description: item.download || 'Archivo disponible desde Real-Debrid'
+    }));
 
-        return { streams };
-    } catch (err) {
-        console.error('❌ Error en RD:', err);
-        return { streams: [] };
-    }
+    return { metas };
+  } catch (err) {
+    console.error('❌ Error cargando catálogo:', err);
+    return { metas: [] };
+  }
 });
 
-const app = express();
-const addonInterface = builder.getInterface();
+// ------------------------------
+// 📺 HANDLER: Streams (enlaces de reproducción)
+// ------------------------------
+builder.defineStreamHandler(async ({ id }) => {
+  try {
+    const response = await fetch('https://api.real-debrid.com/rest/1.0/downloads', {
+      headers: { Authorization: `Bearer ${RD_API_KEY}` }
+    });
 
-// CORRECCIÓN CLAVE 🔧
-app.use('/', addonInterface.getRouter());
+    if (!response.ok) throw new Error('Error accediendo a Real-Debrid');
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`✅ apLAT con RD corriendo en puerto ${PORT}`));
+    const downloads = await response.json();
+    const index = parseInt(id.replace('rd_', ''));
+    const movie = downloads[index];
+
+    if (!movie) return { streams: [] };
+
+    return {
+      streams: [
+        {
+          title: movie.filename || 'Reproducir desde RD',
+          url: movie.download
+        }
+      ]
+    };
+  } catch (err) {
+    console.error('❌ Error obteniendo stream:', err);
+    return { streams: [] };
+  }
+});
+
+// ------------------------------
+// 🚀 Exportar interfaz
+// ------------------------------
+module.exports = builder.getInterface();
