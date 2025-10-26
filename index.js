@@ -21,6 +21,7 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 
+// Catálogo de ejemplo
 builder.defineCatalogHandler(async () => ({
     metas: [
         {
@@ -32,6 +33,7 @@ builder.defineCatalogHandler(async () => ({
     ]
 }));
 
+// Integración básica Real-Debrid
 builder.defineStreamHandler(async ({ id }) => {
     const apiKey = 'BMN5XVDCC3R2XSHG6IBWZ5O64BPCOUI44VZGSRAW2E7QSWXLCD7Q';
     try {
@@ -39,21 +41,30 @@ builder.defineStreamHandler(async ({ id }) => {
             headers: { Authorization: `Bearer ${apiKey}` }
         });
         const data = await res.json();
+
+        // Verifica si la respuesta es válida
+        if (!Array.isArray(data)) {
+            console.log('⚠️ Respuesta inesperada de RD:', data);
+            return { streams: [] };
+        }
+
         const streams = data.slice(0, 3).map(item => ({
             title: item.filename || 'Archivo RD',
             url: 'https://example.com'
         }));
+
         return { streams };
-    } catch (e) {
-        console.error(e);
+    } catch (err) {
+        console.error('❌ Error en RD:', err);
         return { streams: [] };
     }
 });
 
 const app = express();
 const addonInterface = builder.getInterface();
-app.get('/', (req, res) => res.redirect('/manifest.json'));
-app.get('/:resource/:type/:id.json', addonInterface.middleware);
-app.get('/manifest.json', addonInterface.middleware);
+
+// CORRECCIÓN CLAVE 🔧
+app.use('/', addonInterface.getRouter());
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`✅ apLAT con RD corriendo en puerto ${PORT}`));
