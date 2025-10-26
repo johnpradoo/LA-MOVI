@@ -1,78 +1,84 @@
-// apLAT/index.js
 import express from "express";
 import fetch from "node-fetch";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
+const RD_TOKEN = process.env.RD_TOKEN;
 
-// --- MANEJO SEGURO DEL TOKEN ---
-const RD_TOKEN = process.env.RD_TOKEN; // <-- Lo guardas tú en Render > Environment
-
-// --- MANIFIESTO STREMIO ---
+// Manifesto del addon
 const manifest = {
-  id: "org.aplat",
+  id: "org.aplat.rd",
   version: "1.0.0",
-  name: "apLAT",
-  description: "Catálogo de películas enlazadas con Real-Debrid",
+  name: "apLAT - RD Movies",
+  description: "Películas conectadas directamente desde tu cuenta Real-Debrid",
+  resources: ["catalog", "stream"],
   types: ["movie"],
+  idPrefixes: ["aplatrd_"],
   catalogs: [
     {
       type: "movie",
-      id: "aplat_catalog",
-      name: "apLAT Movies",
-      extra: [{ name: "search" }],
+      id: "aplat_rd_movies",
+      name: "Tus películas de RD",
     },
   ],
-  resources: ["catalog", "stream"],
 };
 
-// --- MANIFEST ENDPOINT ---
-app.get("/manifest.json", (req, res) => res.json(manifest));
-
-// --- CATALOGO ---
-app.get("/catalog/:type/:id.json", async (req, res) => {
-  try {
-    // Aquí podrías poner tus propias películas base o listarlas desde tu fuente
-    const catalog = [
-      {
-        id: "movie1",
-        name: "Ejemplo RD Movie",
-        poster: "https://i.imgur.com/OdL0XPt.jpg",
-        description: "Película conectada con Real-Debrid",
-      },
-    ];
-    res.json({ metas: catalog });
-  } catch (err) {
-    console.error(err);
-    res.json({ metas: [] });
-  }
+// Endpoint del manifest
+app.get("/manifest.json", (req, res) => {
+  res.send(manifest);
 });
 
-// --- STREAMS ---
-app.get("/stream/:type/:id.json", async (req, res) => {
+// Endpoint del catálogo
+app.get("/catalog/movie/aplat_rd_movies.json", async (req, res) => {
   try {
-    // Este sería el punto donde tú usas la API de RD para obtener el enlace del archivo
-    const rdResponse = await fetch("https://api.real-debrid.com/rest/1.0/user", {
+    const response = await fetch("https://api.real-debrid.com/rest/1.0/downloads", {
       headers: { Authorization: `Bearer ${RD_TOKEN}` },
     });
-    const data = await rdResponse.json();
+    const data = await response.json();
 
-    const streams = [
-      {
-        name: "Real-Debrid",
-        description: `Enlace RD activo para ${data.username || "usuario"}`,
-        url: "https://example.com/movie.mp4", // aquí tú colocarías el enlace que RD devuelva
-      },
-    ];
+    // Filtrar solo películas (extensiones de video)
+    const movies = data
+      .filter((item) =>
+        item.filename.match(/\.(mp4|mkv|avi|mov)$/i)
+      )
+      .map((item) => ({
+        id: "aplatrd_" + item.id,
+        name: item.filename,
+        type: "movie",
+        poster: "https://i.imgur.com/Jn8zKpT.png",
+        description: "Película disponible desde tu Real-Debrid",
+      }));
 
-    res.json({ streams });
+    res.send({ metas: movies });
   } catch (err) {
     console.error(err);
-    res.json({ streams: [] });
+    res.status(500).send({ error: "Error al conectar con Real-Debrid" });
   }
 });
 
-// --- INICIO ---
+// Endpoint para obtener el stream
+app.get("/stream/movie/:id.json", async (req, res) => {
+  const movieId = req.params.id.replace("aplatrd_", "");
+  try {
+    const response = await fetch(`https://api.real-debrid.com/rest/1.0/downloads/${movieId}`, {
+      headers: { Authorization: `Bearer ${RD_TOKEN}` },
+    });
+    const info = await response.json();
+
+    res.send({
+      streams: [
+        {
+          title: "Ver desde Real-Debrid",
+          url: info.download,
+        },
+      ],
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ error: "Error al obtener el stream" });
+  }
+});
+
 app.listen(PORT, () => {
-  console.log(`✅ apLAT corriendo en el puerto ${PORT}`);
+  console.log(`🔥 apLAT corriendo en el puerto ${PORT}`);
 });
