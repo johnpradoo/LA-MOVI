@@ -60,7 +60,7 @@ builder.defineCatalogHandler(({ type, id, extra }) => {
 builder.defineStreamHandler(({ id }) => {
   const streams = {
     "tt27987047": [
-      { title: "Servidor 1 - 1080p", url: "https://real-debrid.com/d/M5OUNVTPZXYHEE6B" }
+      { title: "Servidor 1 - 1080p", url: "https://real-debrid.com/d/A2VRQXP6MB2OU153" }
     ],
     "tt1375666": [
       { title: "Servidor 1 - 720p", url: "https://samplelib.com/lib/preview/mp4/sample-10s.mp4" }
