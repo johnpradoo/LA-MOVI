@@ -3,8 +3,8 @@ const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
 const manifest = {
   id: "org.aplat.movies",
   version: "1.0.0",
-  name: "apLAT",
-  description: "Add-on de películas LAT creado por John",
+  name: "LA MOVI",
+  description: "Add-on de películas LAT",
   types: ["movie"],
   resources: ["catalog", "stream"],
   idPrefixes: ["tt"],
@@ -12,7 +12,7 @@ const manifest = {
     {
       type: "movie",
       id: "aplatCatalog",
-      name: "Catálogo apLAT",
+      name: "LATAN - LA MOVI",
       extra: [{ name: "search" }]
     }
   ]
