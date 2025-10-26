@@ -60,7 +60,7 @@ builder.defineCatalogHandler(({ type, id, extra }) => {
 builder.defineStreamHandler(({ id }) => {
   const streams = {
     "tt27987047": [
-      { title: "Servidor 1 - 1080p", url: "https://real-debrid.com/streaming-4CUXAGEMQFFZ4" }
+      { title: "Servidor 1 - 1080p", url: "https://bgt1-4.download.real-debrid.com/d/MCAMF4YVQ47DQ97/I.frankenstein.2014.1080p-dual-lat.mp4" }
     ],
     "tt1375666": [
       { title: "Servidor 1 - 720p", url: "https://samplelib.com/lib/preview/mp4/sample-10s.mp4" }
