@@ -1,69 +1,77 @@
-// ------------------------------
-// apLAT - Base funcional para Stremio
-// ------------------------------
+const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
 
-const { addonBuilder, serveHTTP } = require('stremio-addon-sdk');
-
-// ------------------------------
-// 🔧 MANIFESTO
-// ------------------------------
 const manifest = {
-  id: "org.aplat",
+  id: "org.aplat.movies",
   version: "1.0.0",
-  name: "apLAT Base",
-  description: "Versión base funcional del addon apLAT para Stremio",
-  resources: ["catalog", "stream"],
+  name: "apLAT",
+  description: "Add-on de películas LAT creado por John",
   types: ["movie"],
+  resources: ["catalog", "stream"],
+  idPrefixes: ["tt"],
   catalogs: [
     {
       type: "movie",
-      id: "aplat-catalog",
-      name: "Catálogo de Prueba apLAT",
-    },
-  ],
+      id: "aplatCatalog",
+      name: "Catálogo apLAT",
+      extra: [{ name: "search" }]
+    }
+  ]
 };
 
-// ------------------------------
-// 🧱 Builder
-// ------------------------------
 const builder = new addonBuilder(manifest);
 
-// ------------------------------
-// 🎬 HANDLER: Catálogo de prueba
-// ------------------------------
-builder.defineCatalogHandler(() => {
-  const metas = [
-    {
-      id: "aplat_001",
-      type: "movie",
-      name: "Película de prueba apLAT",
-      poster: "https://i.imgur.com/6M7GZ4r.png",
-      description: "Si ves esta película aquí, el addon está funcionando correctamente.",
-    },
-  ];
-  return Promise.resolve({ metas });
-});
-
-// ------------------------------
-// 📺 HANDLER: Stream de prueba
-// ------------------------------
-builder.defineStreamHandler(({ id }) => {
-  if (id === "aplat_001") {
-    return Promise.resolve({
-      streams: [
-        {
-          title: "Stream de prueba apLAT",
-          url: "https://real-debrid.com/d/M5OUNVTPZXYHEE6B",
-        },
-      ],
-    });
+const catalog = [
+  {
+    id: "tt0111161",
+    type: "movie",
+    name: "Sueños de libertad (The Shawshank Redemption)",
+    poster: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
+    description: "Un hombre es encarcelado injustamente y lucha por su libertad con esperanza."
+  },
+  {
+    id: "tt1375666",
+    type: "movie",
+    name: "El origen (Inception)",
+    poster: "https://image.tmdb.org/t/p/w500/aej3LRUga5rhgkmRP6XmuWzK6vR.jpg",
+    description: "Un ladrón que roba secretos del subconsciente debe cumplir la misión imposible de implantar una idea."
+  },
+  {
+    id: "tt0816692",
+    type: "movie",
+    name: "Interestelar (Interstellar)",
+    poster: "https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg",
+    description: "Un grupo de exploradores viaja a través de un agujero de gusano en busca de un nuevo hogar para la humanidad."
   }
-  return Promise.resolve({ streams: [] });
+];
+
+builder.defineCatalogHandler(({ type, id, extra }) => {
+  if (type === "movie" && id === "aplatCatalog") {
+    if (extra && extra.search) {
+      const search = extra.search.toLowerCase();
+      return Promise.resolve({
+        metas: catalog.filter(m => m.name.toLowerCase().includes(search))
+      });
+    }
+    return Promise.resolve({ metas: catalog });
+  }
+  return Promise.resolve({ metas: [] });
 });
 
-// ------------------------------
-// 🚀 SERVIDOR HTTP
-// ------------------------------
+builder.defineStreamHandler(({ id }) => {
+  const streams = {
+    "tt0111161": [
+      { title: "Servidor 1 - 1080p", url: "https://samplelib.com/lib/preview/mp4/sample-5s.mp4" }
+    ],
+    "tt1375666": [
+      { title: "Servidor 1 - 720p", url: "https://samplelib.com/lib/preview/mp4/sample-10s.mp4" }
+    ],
+    "tt0816692": [
+      { title: "Servidor 1 - 1080p", url: "https://samplelib.com/lib/preview/mp4/sample-15s.mp4" }
+    ]
+  };
+  return Promise.resolve({ streams: streams[id] || [] });
+});
+
 serveHTTP(builder.getInterface(), { port: process.env.PORT || 7000 });
 
-console.log("✅ apLAT Base corriendo correctamente");
+console.log("✅ apLAT Add-on corriendo... accede a /manifest.json");
