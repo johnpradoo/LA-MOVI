@@ -22,11 +22,11 @@ const builder = new addonBuilder(manifest);
 
 const catalog = [
   {
-    id: "tt0111161",
+    id: "tt27987047",
     type: "movie",
-    name: "Sueños de libertad (The Shawshank Redemption)",
-    poster: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
-    description: "Un hombre es encarcelado injustamente y lucha por su libertad con esperanza."
+    name: "Reclutas",
+    poster: "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/Xb6lOVCl1vV1bFd3Ti1zdrTxSn.jpg",
+    description: "Cameron, gay acosado, se enlista en los Marines con su mejor amigo. En el campamento de entrenamiento experimentan un profundo cambio personal en medio del peligro, ya que su pelotón se enfrenta a minas terrestres literales y figuradas."
   },
   {
     id: "tt1375666",
@@ -59,8 +59,8 @@ builder.defineCatalogHandler(({ type, id, extra }) => {
 
 builder.defineStreamHandler(({ id }) => {
   const streams = {
-    "tt0111161": [
-      { title: "Servidor 1 - 1080p", url: "https://samplelib.com/lib/preview/mp4/sample-5s.mp4" }
+    "tt27987047": [
+      { title: "Servidor 1 - 1080p", url: "https://real-debrid.com/d/M5OUNVTPZXYHEE6B" }
     ],
     "tt1375666": [
       { title: "Servidor 1 - 720p", url: "https://samplelib.com/lib/preview/mp4/sample-10s.mp4" }
