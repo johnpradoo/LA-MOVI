@@ -60,8 +60,7 @@ builder.defineCatalogHandler(({ type, id, extra }) => {
 builder.defineStreamHandler(({ id }) => {
   const streams = {
     "tt27987047": [
-      { title: "Idioma - LAT
-        4K 2160p", url: "https://bgt1-4.download.real-debrid.com/d/DG7BAS5YDKTWO85/Boots.S01E01.2025.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-HHWEB.mkv" }
+      { title: "Idioma - LAT / 4K 2160p", url: "https://bgt1-4.download.real-debrid.com/d/DG7BAS5YDKTWO85/Boots.S01E01.2025.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-HHWEB.mkv" }
     ],
     "tt1375666": [
       { title: "Servidor 1 - 720p", url: "https://samplelib.com/lib/preview/mp4/sample-10s.mp4" }
