@@ -5,7 +5,7 @@ const manifest = {
   version: "1.0.0",
   name: "LA MOVI",
   description: "Add-on de películas LAT",
-  types: ["movie"],
+  types: ["movie", "series"],
   resources: ["catalog", "stream"],
   idPrefixes: ["tt"],
   catalogs: [
@@ -23,7 +23,7 @@ const builder = new addonBuilder(manifest);
 const catalog = [
   {
     id: "tt27987047",
-    type: "movie",
+    type: "serie",
     name: "Reclutas",
     poster: "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/Xb6lOVCl1vV1bFd3Ti1zdrTxSn.jpg",
     description: "Cameron, gay acosado, se enlista en los Marines con su mejor amigo. En el campamento de entrenamiento experimentan un profundo cambio personal en medio del peligro, ya que su pelotón se enfrenta a minas terrestres literales y figuradas."
