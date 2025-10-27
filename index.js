@@ -1,77 +1,125 @@
-const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
+// ------------------------------
+// LA.MOVI - Addon público Stremio (Películas + Series)
+// ------------------------------
 
+const { addonBuilder, serveHTTP } = require('stremio-addon-sdk');
+
+// ------------------------------
+// 🔧 MANIFESTO
+// ------------------------------
 const manifest = {
-  id: "org.aplat.movies",
+  id: "org.lamovi",
   version: "1.0.0",
-  name: "LA MOVI",
-  description: "Add-on de películas LAT",
-  types: ["movie", "series"],
+  name: "LA.MOVI",
+  description: "Catálogo latino de películas y series creado por John",
   resources: ["catalog", "stream"],
-  idPrefixes: ["tt"],
+  types: ["movie", "series"],
   catalogs: [
     {
       type: "movie",
-      id: "aplatCatalog",
-      name: "LATAN - LA MOVI",
-      extra: [{ name: "search" }]
-    }
-  ]
+      id: "lamovi-movies",
+      name: "🎬 Películas LA.MOVI",
+      extra: [{ name: "search" }],
+    },
+    {
+      type: "series",
+      id: "lamovi-series",
+      name: "📺 Series LA.MOVI",
+      extra: [{ name: "search" }],
+    },
+  ],
 };
 
+// ------------------------------
+// 🧱 Builder
+// ------------------------------
 const builder = new addonBuilder(manifest);
 
-const catalog = [
+// ------------------------------
+// 🎬 CATÁLOGO DE PELÍCULAS
+// ------------------------------
+const peliculas = [
   {
-    id: "tt27987047",
-    type: "serie",
-    name: "Reclutas",
-    poster: "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/Xb6lOVCl1vV1bFd3Ti1zdrTxSn.jpg",
-    description: "Cameron, gay acosado, se enlista en los Marines con su mejor amigo. En el campamento de entrenamiento experimentan un profundo cambio personal en medio del peligro, ya que su pelotón se enfrenta a minas terrestres literales y figuradas."
+    id: "pelicula_001",
+    type: "movie",
+    name: "El Recluta (2024)",
+    poster: "https://i.imgur.com/6M7GZ4r.png",
+    description: "Acción, drama y traición en la frontera. Producción original LATAM.",
+    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
   },
   {
-    id: "tt1375666",
+    id: "pelicula_002",
     type: "movie",
-    name: "El origen (Inception)",
-    poster: "https://image.tmdb.org/t/p/w500/aej3LRUga5rhgkmRP6XmuWzK6vR.jpg",
-    description: "Un ladrón que roba secretos del subconsciente debe cumplir la misión imposible de implantar una idea."
-  },
-  {
-    id: "tt0816692",
-    type: "movie",
-    name: "Interestelar (Interstellar)",
-    poster: "https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg",
-    description: "Un grupo de exploradores viaja a través de un agujero de gusano en busca de un nuevo hogar para la humanidad."
+    name: "El Silencio de la Tormenta",
+    poster: "https://i.imgur.com/m8dLqec.png",
+    description: "Thriller psicológico con giros inesperados.",
+    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
   }
 ];
 
-builder.defineCatalogHandler(({ type, id, extra }) => {
-  if (type === "movie" && id === "aplatCatalog") {
-    if (extra && extra.search) {
-      const search = extra.search.toLowerCase();
-      return Promise.resolve({
-        metas: catalog.filter(m => m.name.toLowerCase().includes(search))
-      });
-    }
-    return Promise.resolve({ metas: catalog });
+// ------------------------------
+// 📺 CATÁLOGO DE SERIES
+// ------------------------------
+const series = [
+  {
+    id: "tt27987047",
+    type: "series",
+    name: "Boots",
+    poster: "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/A3TuuCkaVV3VWrBPk8kYF5mqPQf.jpg",
+    description: "Ambientada en el duro e impredecible mundo del Cuerpo de Marines de Estados Unidos de 1990, cuando el ejército todavía no admitía a personas gay, sigue a Cameron Cope (Miles Heizer), un joven sin rumbo que aún no ha salido del armario, y a su mejor amigo Ray McAffey (Liam Oh), heterosexual e hijo de un marine condecorado. Juntos, tendrán que lidiar con las minas —tanto literales como metafóricas— del campo de entrenamiento, donde forjarán lazos inesperados y descubrirán su verdadero yo en un lugar que les exige más de lo que creían poder dar.",
+    url: "https://bgt1-4.download.real-debrid.com/d/DG7BAS5YDKTWO85/Boots.S01E01.2025.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-HHWEB.mkv"
+  },
+  {
+    id: "serie_002",
+    type: "series",
+    name: "Sombras del Valle",
+    poster: "https://i.imgur.com/3rJZVRr.png",
+    description: "Suspenso rural y secretos familiares.",
+    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
   }
-  return Promise.resolve({ metas: [] });
+];
+
+// ------------------------------
+// 🎯 HANDLER: Catálogo dinámico
+// ------------------------------
+builder.defineCatalogHandler(({ type, id, extra }) => {
+  let catalogo = [];
+
+  if (id === "lamovi-movies") catalogo = peliculas;
+  if (id === "lamovi-series") catalogo = series;
+
+  if (extra && extra.search) {
+    const search = extra.search.toLowerCase();
+    catalogo = catalogo.filter(item =>
+      item.name.toLowerCase().includes(search)
+    );
+  }
+
+  return Promise.resolve({ metas: catalogo });
 });
 
+// ------------------------------
+// 🎥 HANDLER: Streams
+// ------------------------------
 builder.defineStreamHandler(({ id }) => {
-  const streams = {
-    "tt27987047": [
-      { title: "Idioma - LAT / 4K 2160p", url: "https://bgt1-4.download.real-debrid.com/d/DG7BAS5YDKTWO85/Boots.S01E01.2025.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.H.265-HHWEB.mkv" }
-    ],
-    "tt1375666": [
-      { title: "Servidor 1 - 720p", url: "https://samplelib.com/lib/preview/mp4/sample-10s.mp4" }
-    ],
-    "tt0816692": [
-      { title: "Servidor 1 - 1080p", url: "https://samplelib.com/lib/preview/mp4/sample-15s.mp4" }
-    ]
-  };
-  return Promise.resolve({ streams: streams[id] || [] });
+  const all = [...peliculas, ...series];
+  const match = all.find(item => item.id === id);
+  if (match) {
+    return Promise.resolve({
+      streams: [
+        {
+          title: `Ver ${match.name}`,
+          url: match.url
+        }
+      ]
+    });
+  }
+  return Promise.resolve({ streams: [] });
 });
 
+// ------------------------------
+// 🚀 SERVIDOR
+// ------------------------------
 serveHTTP(builder.getInterface(), { port: process.env.PORT || 7000 });
 
-console.log("✅ apLAT Add-on corriendo... accede a /manifest.json");
+console.log("🔥 LA.MOVI corriendo perfectamente");
